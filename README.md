@@ -5,10 +5,15 @@
 2. Joi Validation
 3. Postgres
 
-To start the server
-
+### Run migration
 `Node
-npm start
+node scripts/migrate.js
 `
+
+#### Start Server
+`Node
+npm start`
+
+
 
 Set DATABASE_URL in .env file
