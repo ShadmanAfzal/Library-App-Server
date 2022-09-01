@@ -20,6 +20,7 @@ export const client = new pg.Client({
 
 client.connect();
 
+
 app.get('/',(req,res)=> {
     res.json({'success': true});
 })
