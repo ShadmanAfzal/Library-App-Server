@@ -14,7 +14,7 @@ node scripts/migrate.js
 `Node
 npm start`
 
-###$ Dotenv file configration
+#### Dotenv file configration
 Set DATABASE_URL in .env file
 
 #### Sample API Response
