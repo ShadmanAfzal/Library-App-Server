@@ -5,7 +5,7 @@
 2. Joi Validation
 3. Postgres
 
-### Run migration
+#### Run migration
 `Node
 node scripts/migrate.js
 `
@@ -14,6 +14,8 @@ node scripts/migrate.js
 `Node
 npm start`
 
-
-
+#### Dotenv file configration
 Set DATABASE_URL in .env file
+
+#### Sample API Response
+<img src="https://github.com/ShadmanAfzal/Library-App-Server/blob/main/static/response.png"></img>
