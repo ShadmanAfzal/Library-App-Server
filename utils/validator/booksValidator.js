@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { BOOK_CATEGORY } from "../enum/bookCategory.js";
 
 export const booksValidator = Joi.object({
     title: Joi.string().required().messages({
@@ -22,7 +23,8 @@ export const booksValidator = Joi.object({
         "any.required": "Image url is required for this product",
         "*": "Please provide valid url",
     }),
-    tag: Joi.array().items(Joi.string()),
+    genre: Joi.string().valid(...Object.values(BOOK_CATEGORY))
+        .messages({ '*': 'Genre must be one of Comedy, Science fiction, Biography, Triller, Action, Comic, Mystery, Historical' }),
 });
 
 export const updateBookValidator = Joi.object({
@@ -43,5 +45,7 @@ export const updateBookValidator = Joi.object({
         "string.empty": "Please image url for the product",
         "*": "Please provide valid url",
     }),
-    tag: Joi.array().items(Joi.string()),
+    genre: Joi.string()
+        .valid(...Object.values(BOOK_CATEGORY))
+        .messages({ '*': 'Genre must be one of Comedy, Science fiction, Biography, Triller, Action, Comic, Mystery, Historical' })
 });

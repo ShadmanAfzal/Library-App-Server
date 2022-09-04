@@ -15,7 +15,9 @@ const query = `CREATE TABLE IF NOT EXISTS books(
     description TEXT NOT NULL,
     author TEXT NOT NULL,
     photo_url TEXT,
-    tag TEXT[]);`;
+    added_date timestamp now(),
+    modified_date timestamp now(),
+    genre TEXT[]);`;
 
 client.query(query)
     .then(value => console.log("Migrated successfully")).
