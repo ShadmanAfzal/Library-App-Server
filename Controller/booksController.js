@@ -7,7 +7,9 @@ export const getBooks = async (req, res) => {
     try {
         const currentPage = Number(req.query.page ?? 1);
 
-        const books = await getBook(currentPage);
+        const sortBy = req.query.sortBy;
+
+        const books = await getBook(currentPage, sortBy);
 
         res.json({ success: true, message: 'ok', ...books });
     } catch (error) {
@@ -79,19 +81,21 @@ export const filterBooks = async (req, res) => {
     try {
         const currentPage = Number(req.query.page ?? 1);
 
+        const sortBy = req.query.sortBy;
+
         const filterValidator = Joi.object({
             filter: Joi.string().valid(...Object.values(BOOK_CATEGORY))
                 .messages({ '*': 'Genre must be one of Comedy, Science fiction, Biography, Triller, Action, Comic, Mystery, Historical' })
-        })
+        });
 
         const filterResult = filterValidator.validate(req.body);
 
-        if(filterResult.error){
+        if (filterResult.error) {
             return res.status(400).json({ success: false, message: filterResult.error.message })
         }
 
-        res.json(await filterBook(currentPage, req.body.filter));
+        res.json(await filterBook(currentPage, req.body.filter, sortBy));
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        res.status(500).json({ success: false, message: error.message });
     }
 }

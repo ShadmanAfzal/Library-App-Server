@@ -1,13 +1,16 @@
 import { client } from "../server.js"
+import { SortBooks } from "../Services/sortBooks.js";
 
 const UUID_REGEX = /^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const ITEM_PER_PAGE = 5;
 
-export const getBook = async (currentPage) => {
+export const getBook = async (currentPage, sortBy) => {
 
     const result = await client.query(`SELECT * FROM books;`);
 
-    const paginatedResult = result.rows.slice((currentPage - 1) * ITEM_PER_PAGE, currentPage * ITEM_PER_PAGE);
+    const sortedResult = SortBooks(result.rows, sortBy);
+
+    const paginatedResult = sortedResult.slice((currentPage - 1) * ITEM_PER_PAGE, currentPage * ITEM_PER_PAGE);
 
     return { 'totalPage': Math.ceil(result.rowCount / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
 }
@@ -20,10 +23,12 @@ export const searchBook = async (currentPage, searchQuery) => {
     return { 'totalPage': Math.ceil(result.rowCount / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
 }
 
-export const filterBook = async (currentPage, filterBooks) => {
+export const filterBook = async (currentPage, filterBooks, sortBy) => {
     const result = await client.query(`SELECT * FROM books where genre = '${filterBooks}';`);
-    
-    const paginatedResult = result.rows.slice((currentPage - 1) * ITEM_PER_PAGE, currentPage * ITEM_PER_PAGE);
+
+    const sortedResult = SortBooks(result.rows, sortBy);
+
+    const paginatedResult = sortedResult.slice((currentPage - 1) * ITEM_PER_PAGE, currentPage * ITEM_PER_PAGE);
 
     return { 'totalPage': Math.ceil(result.rowCount / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
 }
