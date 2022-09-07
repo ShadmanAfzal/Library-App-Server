@@ -1,83 +1,83 @@
 import Joi from 'joi';
-import { addBook, deleteBook, filterBook, getBook, searchBook, updateBook } from '../repository/booksRepository.js';
+import * as BookRepository from '../repository/booksRepository.js';
 import { BOOK_CATEGORY } from '../utils/enum/bookCategory.js';
+import BookError from '../utils/error/error.js';
 import { booksValidator, updateBookValidator } from '../utils/validator/booksValidator.js';
 
-export const getBooks = async (req, res) => {
+export const getBooks = async (req, res, next) => {
     try {
         const currentPage = Number(req.query.page ?? 1);
 
         const sortBy = req.query.sortBy;
 
-        const books = await getBook(currentPage, sortBy);
+        const books = await BookRepository.getBooks(currentPage, sortBy);
 
         res.json({ success: true, message: 'ok', ...books });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        return next(new BookError(error.statusCode, error.message));
     }
 }
 
-export const addBooks = async (req, res) => {
+export const addBooks = async (req, res, next) => {
     try {
 
-        console.log(req.body);
         const validationResult = booksValidator.validate(req.body);
 
-
         if (validationResult.error) {
-            return res.status(400).json({ success: false, message: validationResult.error.message })
+            return next(new BookError(400, validationResult.error.message));
         }
 
-        await addBook(req.body);
+        await BookRepository.addBooks(req.body);
+
         res.json({ success: true, message: 'book added successfully' });
+
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        return next(new BookError(error.statusCode, error.message));
     }
 }
 
-export const updateBooks = async (req, res) => {
+export const updateBooks = async (req, res, next) => {
     try {
         const id = req.params.id;
 
         const validationResult = updateBookValidator.validate(req.body);
 
         if (validationResult.error) {
-            return res.status(400).json({ success: false, message: validationResult.error.message })
+            return next(new BookError(400, validationResult.error.message));
         }
 
-        res.json(await updateBook(id, req.body));
+        res.json(await BookRepository.updateBooks(id, req.body));
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        return next(new BookError(error.statusCode, error.message));
     }
 }
 
-export const deleteBooks = async (req, res) => {
+export const deleteBooks = async (req, res, next) => {
     try {
         const id = req.params.id;
-
-        res.json(await deleteBook(id));
+        res.json(await BookRepository.deleteBooks(id));
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        return next(new BookError(error.statusCode, error.message));
     }
 }
 
-export const searchBooks = async (req, res) => {
+export const searchBooks = async (req, res, next) => {
     try {
         const currentPage = Number(req.query.page ?? 1);
 
         const searchQuery = req.body.searchQuery;
 
         if (!searchQuery) {
-            return res.status(400).json({ success: false, message: 'searchQuery required' });
+            return next(new BookError(400, 'SearchQuery required'));            
         }
 
-        res.json(await searchBook(currentPage, searchQuery));
+        res.json(await BookRepository.searchBooks(currentPage, searchQuery));
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message })
+        return next(new BookError(error.statusCode, error.message));
     }
 }
 
-export const filterBooks = async (req, res) => {
+export const filterBooks = async (req, res, next) => {
     try {
         const currentPage = Number(req.query.page ?? 1);
 
@@ -91,11 +91,11 @@ export const filterBooks = async (req, res) => {
         const filterResult = filterValidator.validate(req.body);
 
         if (filterResult.error) {
-            return res.status(400).json({ success: false, message: filterResult.error.message })
+            return next(new BookError(400, filterResult.error.message));
         }
 
-        res.json(await filterBook(currentPage, req.body.filter, sortBy));
+        res.json(await BookRepository.filterBooks(currentPage, req.body.filter, sortBy));
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        return next(new BookError(error.statusCode, error.message));
     }
 }

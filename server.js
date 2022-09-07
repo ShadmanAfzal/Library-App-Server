@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import booksRouter from "./Router/bookRouter.js";
 import pg from "pg";
 import cors from 'cors';
+import { errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
 
@@ -26,6 +27,8 @@ app.get('/',(req,res)=> {
 })
 
 app.use('/api/v1/books', booksRouter);
+
+app.use(errorHandler);
 
 app.listen(PORT, ()=> {
     console.log(`server running at ${PORT}`);

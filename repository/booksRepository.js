@@ -1,10 +1,11 @@
 import { client } from "../server.js"
 import { SortBooks } from "../Services/sortBooks.js";
+import BookError from "../utils/error/error.js";
 
 const UUID_REGEX = /^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const ITEM_PER_PAGE = 5;
 
-export const getBook = async (currentPage, sortBy) => {
+export const getBooks = async (currentPage, sortBy) => {
 
     const result = await client.query(`SELECT * FROM books;`);
 
@@ -15,7 +16,7 @@ export const getBook = async (currentPage, sortBy) => {
     return { 'totalPage': Math.ceil(result.rowCount / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
 }
 
-export const searchBook = async (currentPage, searchQuery) => {
+export const searchBooks = async (currentPage, searchQuery) => {
     const result = await client.query(`SELECT * FROM books where LOWER(title) like LOWER('%${searchQuery}%') or LOWER(description) like LOWER('%${searchQuery}%') or LOWER(author) like LOWER('%${searchQuery}%');`);
 
     const paginatedResult = result.rows.slice((currentPage - 1) * ITEM_PER_PAGE, currentPage * ITEM_PER_PAGE);
@@ -23,7 +24,7 @@ export const searchBook = async (currentPage, searchQuery) => {
     return { 'totalPage': Math.ceil(result.rowCount / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
 }
 
-export const filterBook = async (currentPage, filterBooks, sortBy) => {
+export const filterBooks = async (currentPage, filterBooks, sortBy) => {
     const result = await client.query(`SELECT * FROM books where genre = '${filterBooks}';`);
 
     const sortedResult = SortBooks(result.rows, sortBy);
@@ -33,7 +34,7 @@ export const filterBook = async (currentPage, filterBooks, sortBy) => {
     return { 'totalPage': Math.ceil(result.rowCount / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
 }
 
-export const addBook = async (book) => {
+export const addBooks = async (book) => {
 
     if (!book.genre) {
         book.genre = '';
@@ -44,16 +45,16 @@ export const addBook = async (book) => {
     await client.query(insertQuery);
 }
 
-export const updateBook = async (id, book) => {
+export const updateBooks = async (id, book) => {
 
     if (UUID_REGEX.test(id) === false) {
-        return { success: false, message: 'Book not found' };
+        throw new BookError(404, 'Book not found');
     }
 
     const userDetail = await client.query(`select * from books where id='${id}'`);
 
     if (userDetail.rowCount === 0) {
-        return { success: false, message: 'Book not found' };
+        throw new BookError(404, 'Book not found');
     }
 
     const updatedDetails = userDetail.rows[0];
@@ -83,16 +84,16 @@ export const updateBook = async (id, book) => {
     return { 'success': true, 'message': 'book details updated successfully' };
 }
 
-export const deleteBook = async (id) => {
+export const deleteBooks = async (id) => {
 
     if (UUID_REGEX.test(id) === false) {
-        return { success: false, message: 'Book not found' };
+        throw new BookError(404, 'Book not found');
     }
 
     const userDetail = await client.query(`select * from books where id='${id}'`);
 
     if (userDetail.rowCount === 0) {
-        return { success: false, message: 'Book not found' };
+        throw new BookError(404, 'Book not found');
     }
 
     await client.query(`delete from books where id = '${id}'`)
