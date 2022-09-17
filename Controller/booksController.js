@@ -99,3 +99,18 @@ export const filterBooks = async (req, res, next) => {
         return next(new BookError(error.statusCode, error.message));
     }
 }
+
+
+export const getBookById = async (req,res,next) => {
+    try {
+        
+        const id = req.params.id;
+
+        const result = await BookRepository.getBookById(id);
+
+        res.json({success: true, data: result});
+
+    } catch (error) {
+        return next(new BookError(error.statusCode, error.message));
+    }
+}

@@ -51,13 +51,13 @@ export const updateBooks = async (id, book) => {
         throw new BookError(404, 'Book not found');
     }
 
-    const userDetail = await client.query(`select * from books where id='${id}'`);
+    const bookDetail = await client.query(`select * from books where id='${id}'`);
 
-    if (userDetail.rowCount === 0) {
+    if (bookDetail.rowCount === 0) {
         throw new BookError(404, 'Book not found');
     }
 
-    const updatedDetails = userDetail.rows[0];
+    const updatedDetails = bookDetail.rows[0];
 
     if (book.title) {
         updatedDetails.title = book.title;
@@ -90,13 +90,27 @@ export const deleteBooks = async (id) => {
         throw new BookError(404, 'Book not found');
     }
 
-    const userDetail = await client.query(`select * from books where id='${id}'`);
+    const bookDetail = await client.query(`select * from books where id='${id}'`);
 
-    if (userDetail.rowCount === 0) {
+    if (bookDetail.rowCount === 0) {
         throw new BookError(404, 'Book not found');
     }
 
     await client.query(`delete from books where id = '${id}'`)
 
-    return { 'success': true, 'message': `book with title ${userDetail.rows[0].title} deleted successfully` };
+    return { 'success': true, 'message': `book with title ${bookDetail.rows[0].title} deleted successfully` };
+}
+
+export const getBookById = async (id) => {
+    if (UUID_REGEX.test(id) === false) {
+        throw new BookError(404, 'Book not found');
+    }
+
+    const bookDetail = await client.query(`select * from books where id='${id}'`);
+
+    if (bookDetail.rowCount === 0) {
+        throw new BookError(404, 'Book not found');
+    }
+
+    return bookDetail.rows[0];
 }
