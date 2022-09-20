@@ -1,4 +1,5 @@
-import { client } from "../server.js"
+import { Op } from "sequelize";
+import BookClient from "../Database/client.js";
 import { SortBooks } from "../Services/sortBooks.js";
 import BookError from "../utils/error/error.js";
 
@@ -7,31 +8,59 @@ const ITEM_PER_PAGE = 5;
 
 export const getBooks = async (currentPage, sortBy) => {
 
-    const result = await client.query(`SELECT * FROM books;`);
+    const result = await BookClient.findAll({ raw: true });
 
-    const sortedResult = SortBooks(result.rows, sortBy);
+    const sortedResult = SortBooks(result, sortBy);
 
     const paginatedResult = sortedResult.slice((currentPage - 1) * ITEM_PER_PAGE, currentPage * ITEM_PER_PAGE);
 
-    return { 'totalPage': Math.ceil(result.rowCount / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
+    return { 'totalPage': Math.ceil(result.length / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
 }
 
 export const searchBooks = async (currentPage, searchQuery) => {
-    const result = await client.query(`SELECT * FROM books where LOWER(title) like LOWER('%${searchQuery}%') or LOWER(description) like LOWER('%${searchQuery}%') or LOWER(author) like LOWER('%${searchQuery}%');`);
 
-    const paginatedResult = result.rows.slice((currentPage - 1) * ITEM_PER_PAGE, currentPage * ITEM_PER_PAGE);
+    const result = await BookClient.findAll({
+        raw: true,
+        where: {
+            [Op.or]: [
+                {
+                    title: {
+                        [Op.iLike]: `%${searchQuery}%`,
+                    }
+                },
+                {
+                    description: {
+                        [Op.iLike]: `%${searchQuery}%`,
+                    }
+                },
+                {
+                    author: {
+                        [Op.iLike]: `%${searchQuery}%`,
+                    }
+                }
+            ]
+        },
+    });
 
-    return { 'totalPage': Math.ceil(result.rowCount / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
+    const paginatedResult = result.slice((currentPage - 1) * ITEM_PER_PAGE, currentPage * ITEM_PER_PAGE);
+
+    return { 'totalPage': Math.ceil(result.length / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
 }
 
 export const filterBooks = async (currentPage, filterBooks, sortBy) => {
-    const result = await client.query(`SELECT * FROM books where genre = '${filterBooks}';`);
 
-    const sortedResult = SortBooks(result.rows, sortBy);
+    const result = await BookClient.findAll({
+        raw: true,
+        where: {
+            genre: filterBooks
+        }
+    });
+
+    const sortedResult = SortBooks(result, sortBy);
 
     const paginatedResult = sortedResult.slice((currentPage - 1) * ITEM_PER_PAGE, currentPage * ITEM_PER_PAGE);
 
-    return { 'totalPage': Math.ceil(result.rowCount / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
+    return { 'totalPage': Math.ceil(result.length / ITEM_PER_PAGE), 'currentPage': currentPage, 'count': paginatedResult.length, data: paginatedResult };
 }
 
 export const addBooks = async (book) => {
@@ -40,9 +69,8 @@ export const addBooks = async (book) => {
         book.genre = '';
     }
 
-    const insertQuery = `INSERT INTO books (title,description,author,photo_url,genre) values('${book.title}', '${book.description}', '${book.author}', '${book.photo_url}', '${book.genre}');`;
-
-    await client.query(insertQuery);
+    const insertedBook = await BookClient.create(book);
+    return insertedBook.get();
 }
 
 export const updateBooks = async (id, book) => {
@@ -51,35 +79,7 @@ export const updateBooks = async (id, book) => {
         throw new BookError(404, 'Book not found');
     }
 
-    const bookDetail = await client.query(`select * from books where id='${id}'`);
-
-    if (bookDetail.rowCount === 0) {
-        throw new BookError(404, 'Book not found');
-    }
-
-    const updatedDetails = bookDetail.rows[0];
-
-    if (book.title) {
-        updatedDetails.title = book.title;
-    }
-
-    if (book.author) {
-        updatedDetails.author = book.author;
-    }
-
-    if (book.description) {
-        updatedDetails.description = book.description;
-    }
-
-    if (book.photo_url) {
-        updatedDetails.photo_url = book.photo_url;
-    }
-
-    if (book.genre) {
-        updatedDetails.genre = book.genre;
-    }
-
-    await client.query(`update books set title = '${updatedDetails.title}', author = '${updatedDetails.author}', description = '${updatedDetails.description}', photo_url = '${updatedDetails.photo_url}', modified_date = now(), genre = '${updatedDetails.genre}' where id='${id}';`)
+    await BookClient.update(book, { where: { "id": id } });
 
     return { 'success': true, 'message': 'book details updated successfully' };
 }
@@ -90,15 +90,14 @@ export const deleteBooks = async (id) => {
         throw new BookError(404, 'Book not found');
     }
 
-    const bookDetail = await client.query(`select * from books where id='${id}'`);
+    const count = await BookClient.destroy({ where: { id: id } });
 
-    if (bookDetail.rowCount === 0) {
+    if (count === 1) {
         throw new BookError(404, 'Book not found');
     }
 
-    await client.query(`delete from books where id = '${id}'`)
+    return { 'success': true, 'message': `Book with title ${bookDetail.rows[0].title} deleted successfully` };
 
-    return { 'success': true, 'message': `book with title ${bookDetail.rows[0].title} deleted successfully` };
 }
 
 export const getBookById = async (id) => {
@@ -106,11 +105,11 @@ export const getBookById = async (id) => {
         throw new BookError(404, 'Book not found');
     }
 
-    const bookDetail = await client.query(`select * from books where id='${id}'`);
+    const bookDetail = await BookClient.findOne({ where: { id: id } })
 
-    if (bookDetail.rowCount === 0) {
+    if (!bookDetail) {
         throw new BookError(404, 'Book not found');
     }
 
-    return bookDetail.rows[0];
+    return bookDetail.get();
 }

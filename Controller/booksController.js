@@ -27,9 +27,9 @@ export const addBooks = async (req, res, next) => {
             return next(new BookError(400, validationResult.error.message));
         }
 
-        await BookRepository.addBooks(req.body);
+        const data = await BookRepository.addBooks(req.body);
 
-        res.json({ success: true, message: 'book added successfully' });
+        res.json({ success: true, data: data, message: 'book added successfully' });
 
     } catch (error) {
         return next(new BookError(error.statusCode, error.message));
@@ -65,12 +65,12 @@ export const searchBooks = async (req, res, next) => {
     try {
         const currentPage = Number(req.query.page ?? 1);
 
-        const searchQuery = req.body.searchQuery;
+        const searchQuery = req.body.query;
 
         if (!searchQuery) {
-            return next(new BookError(400, 'SearchQuery required'));            
+            return next(new BookError(400, 'query required'));            
         }
-
+        
         res.json(await BookRepository.searchBooks(currentPage, searchQuery));
     } catch (error) {
         return next(new BookError(error.statusCode, error.message));
