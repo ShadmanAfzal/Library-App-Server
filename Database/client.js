@@ -1,7 +1,7 @@
 import { Sequelize } from "sequelize";
 import BookModel from "../Model/book.model.js";
 
-const client = new Sequelize("postgresql://postgres:justin12345@localhost:5432/library", { logging: false });
+const client = new Sequelize(process.env.DATABASE_URL, { logging: false });
 
 client.authenticate()
     .then(() => console.log('connected to database'))
