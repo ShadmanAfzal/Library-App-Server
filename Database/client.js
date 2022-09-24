@@ -1,7 +1,8 @@
 import { Sequelize } from "sequelize";
+import { config } from "../Config/config.js";
 import BookModel from "../Model/book.model.js";
 
-const client = new Sequelize(process.env.DATABASE_URL, { logging: false });
+const client = new Sequelize(config.DATABASE_URL, { logging: false });
 
 client.authenticate()
     .then(() => console.log('connected to database'))

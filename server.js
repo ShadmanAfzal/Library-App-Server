@@ -1,15 +1,12 @@
 import express from "express";
-import dotenv from "dotenv";
 import booksRouter from "./Router/bookRouter.js";
 import cors from 'cors';
 import { errorHandler } from "./middleware/errorHandler.js";
-import chalk from "chalk";
-
-dotenv.config();
+import { config } from "./Config/config.js";
 
 const app = express();
 
-const PORT = process.env.PORT || 8080;
+const PORT = config.PORT || 8080;
 
 app.use(express.json());
 
@@ -24,5 +21,5 @@ app.use('/api/v1/books', booksRouter);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-    console.log(chalk.green.bold.inverse(`server running at ${PORT}`));
+    console.log(`Server running at ${PORT}`);
 })

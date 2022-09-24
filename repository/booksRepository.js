@@ -79,9 +79,9 @@ export const updateBooks = async (id, book) => {
         throw new BookError(404, 'Book not found');
     }
 
-    await BookClient.update(book, { where: { "id": id } });
+    const result = await BookClient.update(book, { where: { "id": id }, returning: true });
 
-    return { 'success': true, 'message': 'book details updated successfully' };
+    return { 'success': true, 'message': 'book details updated successfully', data: result[1] };
 }
 
 export const deleteBooks = async (id) => {
